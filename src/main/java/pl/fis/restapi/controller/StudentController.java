@@ -1,13 +1,12 @@
 package pl.fis.restapi.controller;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import pl.fis.restapi.entity.Student;
 import pl.fis.restapi.service.StudentService;
 
 import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping(path = "api/student")
 public class StudentController {
 
@@ -18,13 +17,11 @@ public class StudentController {
     }
 
     @GetMapping
-    @ResponseBody
     public List<Student> getAllStudents() {
         return studentService.getAllStudents();
     }
 
     @GetMapping(path = "/{id}")
-    @ResponseBody
     public Student getStudentById(@PathVariable Long id) {
         return studentService.getStudentById(id);
     }

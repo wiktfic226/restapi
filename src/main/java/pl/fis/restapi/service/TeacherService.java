@@ -22,7 +22,7 @@ public class TeacherService {
     }
 
     public void addTeacher(Teacher teacher) {
-        teacher.setId((long) (teachers.size() + 1));
+        teacher.setId(teachers.get(teachers.size() - 1).getId() + 1);
         for(Teacher teacher1 : teachers) {
             if(teacher1.getSubject() == teacher.getSubject())
                 throw new IllegalArgumentException(
@@ -54,11 +54,28 @@ public class TeacherService {
                 .collect(Collectors.toList());
         if(foundTeachers.size() == 0)
             throw new IllegalArgumentException(String.format("Teacher with id %d does not exists", id));
-        if(toUpdate.getFirstName() != null && toUpdate.getLastName() != null && toUpdate.getSubject() != null) {
-            foundTeachers.get(0).setFirstName(toUpdate.getFirstName());
-            foundTeachers.get(0).setLastName(toUpdate.getLastName());
-            foundTeachers.get(0).setSubject(toUpdate.getSubject());
+        Teacher teacher = foundTeachers.get(0);
+        teacher.setFirstName(toUpdate.getFirstName() != null ? toUpdate.getFirstName() : teacher.getFirstName());
+        teacher.setLastName(toUpdate.getLastName() != null ? toUpdate.getLastName() : teacher.getLastName());
+        if(toUpdate.getSubject() != null) {
+            for(Teacher teacher1 : teachers) {
+                if(teacher1.getSubject().equals(toUpdate.getSubject()))
+                    throw new IllegalArgumentException(
+                            String.format("Teacher with subject %s already exists",
+                                    toUpdate.getSubject()));
+            }
+            teacher.setSubject(toUpdate.getSubject());
         }
+    }
+
+    public void deleteTeacher(Long id) {
+        List<Teacher> foundTeachers = teachers
+                .stream()
+                .filter(teacher -> teacher.getId().equals(id))
+                .collect(Collectors.toList());
+        if(foundTeachers.size() == 0)
+            throw new IllegalArgumentException(String.format("Teacher with id %d does not exists", id));
+        teachers.remove(foundTeachers.get(0));
     }
 
     public List<Student> getTeacherClass(Long id) {
@@ -75,8 +92,27 @@ public class TeacherService {
                 .collect(Collectors.toList());
     }
 
+    public void deleteStudentFromClassByTeacherId(Long teacherId, Long studentId) {
+        List<Teacher> foundTeachers = teachers
+                .stream()
+                .filter(teacher -> teacher.getId().equals(teacherId))
+                .collect(Collectors.toList());
+        if(foundTeachers.size() == 0)
+            throw new IllegalArgumentException(String.format("Teacher with id %d does not exists", teacherId));
+        List<Student> foundStudents = studentService
+                .getAllStudents()
+                .stream()
+                .filter(student -> student.getAttendedSubjects().contains(foundTeachers.get(0).getSubject()))
+                .filter(student -> student.getId().equals(studentId))
+                .collect(Collectors.toList());
+        if(foundStudents.size() == 0)
+            throw new IllegalArgumentException(String.format("Student with id %d does not exists or " +
+                    "does not attend %s", teacherId, foundTeachers.get(0).getSubject()));
+        foundStudents.get(0).getAttendedSubjects().remove(foundTeachers.get(0).getSubject());
+    }
+
     @PostConstruct
-    private void addTeachers() {
+    public void addTeachers() {
         Teacher teacher1 = new Teacher(1L, "Anna", "Biologia", Subject.BIOLOGY);
         Teacher teacher2 = new Teacher(2L, "Karolina", "Algebra", Subject.ALGEBRA);
         Teacher teacher3 = new Teacher(3L, "Katarzyna", "Prawo", Subject.LAW);

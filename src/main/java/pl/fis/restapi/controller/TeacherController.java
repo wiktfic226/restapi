@@ -1,16 +1,13 @@
 package pl.fis.restapi.controller;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import pl.fis.restapi.entity.Student;
+import pl.fis.restapi.entity.Teacher;
 import pl.fis.restapi.service.TeacherService;
 
 import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping(path = "api/teacher")
 public class TeacherController {
     private final TeacherService teacherService;
@@ -20,8 +17,37 @@ public class TeacherController {
     }
 
     @GetMapping(path = "/{id}/class")
-    @ResponseBody
     public List<Student> getTeacherClass(@PathVariable Long id) {
         return teacherService.getTeacherClass(id);
+    }
+
+    @DeleteMapping(path = "/deleteStudentFromClass/{teacherId}")
+    public void deleteStudentFromClassByTeacherId(@PathVariable Long teacherId, @RequestParam Long studentId) {
+        teacherService.deleteStudentFromClassByTeacherId(teacherId, studentId);
+    }
+
+    @GetMapping
+    public List<Teacher> getAllTeachers() {
+        return teacherService.getAllTeachers();
+    }
+
+    @GetMapping(path = "/{id}")
+    public Teacher getTeacherById(@PathVariable Long id) {
+        return teacherService.getTeacherById(id);
+    }
+
+    @PostMapping
+    public void addTeacher(@RequestBody Teacher teacher) {
+        teacherService.addTeacher(teacher);
+    }
+
+    @PutMapping(path = "/{id}")
+    public void editTeacher(@PathVariable Long id, @RequestBody Teacher toUpdate) {
+        teacherService.editTeacher(id, toUpdate);
+    }
+
+    @DeleteMapping(path = "/{id}")
+    public void deleteTeacher(@PathVariable Long id) {
+        teacherService.deleteTeacher(id);
     }
 }
