@@ -1,5 +1,6 @@
 package pl.fis.restapi.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.fis.restapi.entity.Student;
 import pl.fis.restapi.entity.Teacher;
@@ -17,37 +18,41 @@ public class TeacherController {
     }
 
     @GetMapping(path = "/{id}/class")
-    public List<Student> getTeacherClass(@PathVariable Long id) {
-        return teacherService.getTeacherClass(id);
+    public ResponseEntity<List<Student>> getTeacherClass(@PathVariable Long id) {
+        return ResponseEntity.ok().header("Successful", "true").body(teacherService.getTeacherClass(id));
     }
 
     @DeleteMapping(path = "/deleteStudentFromClass/{teacherId}")
-    public void deleteStudentFromClassByTeacherId(@PathVariable Long teacherId, @RequestParam Long studentId) {
+    public ResponseEntity<Void> deleteStudentFromClassByTeacherId(@PathVariable Long teacherId, @RequestParam Long studentId) {
         teacherService.deleteStudentFromClassByTeacherId(teacherId, studentId);
+        return ResponseEntity.ok().header("Successful", "true").build();
     }
 
     @GetMapping
-    public List<Teacher> getAllTeachers() {
-        return teacherService.getAllTeachers();
+    public ResponseEntity<List<Teacher>> getAllTeachers() {
+        return ResponseEntity.ok().header("Successful", "true").body(teacherService.getAllTeachers());
     }
 
     @GetMapping(path = "/{id}")
-    public Teacher getTeacherById(@PathVariable Long id) {
-        return teacherService.getTeacherById(id);
+    public ResponseEntity<Teacher> getTeacherById(@PathVariable Long id) {
+        return ResponseEntity.ok().header("Successful", "true").body(teacherService.getTeacherById(id));
     }
 
     @PostMapping
-    public void addTeacher(@RequestBody Teacher teacher) {
+    public ResponseEntity<Void> addTeacher(@RequestBody Teacher teacher) {
         teacherService.addTeacher(teacher);
+        return ResponseEntity.ok().header("Successful", "true").build();
     }
 
     @PutMapping(path = "/{id}")
-    public void editTeacher(@PathVariable Long id, @RequestBody Teacher toUpdate) {
+    public ResponseEntity<Void> editTeacher(@PathVariable Long id, @RequestBody Teacher toUpdate) {
         teacherService.editTeacher(id, toUpdate);
+        return ResponseEntity.ok().header("Successful", "true").build();
     }
 
     @DeleteMapping(path = "/{id}")
-    public void deleteTeacher(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTeacher(@PathVariable Long id) {
         teacherService.deleteTeacher(id);
+        return ResponseEntity.ok().header("Successful", "true").build();
     }
 }

@@ -3,6 +3,7 @@ package pl.fis.restapi.service;
 import org.springframework.stereotype.Service;
 import pl.fis.restapi.entity.Student;
 import pl.fis.restapi.enums.Subject;
+import pl.fis.restapi.exception.StudentNotFoundException;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class StudentService {
         if(foundStudents.size() != 0)
             return foundStudents.get(0);
         else
-            throw new IllegalArgumentException(String.format("Student with id %d does not exists", id));
+            throw new StudentNotFoundException(String.format("Student with id %d does not exists", id));
     }
 
     public void editStudent(Long id, Student toUpdate) {
@@ -44,7 +45,7 @@ public class StudentService {
                 .filter(student -> student.getId().equals(id))
                 .collect(Collectors.toList());
         if(foundStudents.size() == 0)
-            throw new IllegalArgumentException(String.format("Student with id %d does not exists", id));
+            throw new StudentNotFoundException(String.format("Student with id %d does not exists", id));
         foundStudents.get(0).setAge(toUpdate.getAge() != null ? toUpdate.getAge() : foundStudents.get(0).getAge());
         foundStudents.get(0).setLastName(toUpdate.getLastName() != null ? toUpdate.getLastName() : foundStudents.get(0).getLastName());
     }
@@ -57,7 +58,7 @@ public class StudentService {
         if(foundStudents.size() != 0)
             students.remove(foundStudents.get(0));
         else
-            throw new IllegalArgumentException(String.format("Student with id %d does not exists", id));
+            throw new StudentNotFoundException(String.format("Student with id %d does not exists", id));
 
     }
 
