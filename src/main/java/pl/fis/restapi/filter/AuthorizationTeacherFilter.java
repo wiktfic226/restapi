@@ -4,7 +4,6 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Enumeration;
 
 public class AuthorizationTeacherFilter extends AuthorizationFilter implements Filter {
     @Override
