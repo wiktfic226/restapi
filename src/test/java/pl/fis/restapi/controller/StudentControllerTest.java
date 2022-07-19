@@ -2,6 +2,7 @@ package pl.fis.restapi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
+import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,9 +42,10 @@ public class StudentControllerTest {
 
     @Test
     public void getAllStudentsTest() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/student"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/student").header("role", "STUDENT_ROLE"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$", hasSize(10)));
@@ -52,11 +54,21 @@ public class StudentControllerTest {
     @ParameterizedTest
     @CsvSource({"1, Wiktoria", "2, Aleksandra", "3, Ala"})
     public void getStudentByIdTest(Long id, String firstName) throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/student/{id}", id))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/student/{id}", id).header("role", "STUDENT_ROLE"))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.firstName", Matchers.equalTo(firstName)));
+    }
+
+    @Test
+    public void unauthorizedAccessTest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/student"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("{\"errorMessage\":\"User unauthorized!\"}"))
+                .andExpect(header().string("Successful", Is.is("false")));
     }
 
     @Test
@@ -64,14 +76,18 @@ public class StudentControllerTest {
         Student student = new Student("Test", "TestLastName", 25, new ArrayList<>(List.of(Subject.BIOLOGY)));
         ObjectMapper mapper = new ObjectMapper();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/student")
-                .content(mapper.writeValueAsString(student))
-                .contentType(MediaType.APPLICATION_JSON))
+                        .content(mapper.writeValueAsString(student))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("role", "STUDENT_ROLE"))
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(status().isOk());
         mockMvc.perform(MockMvcRequestBuilders.get("/api/student/{id}", studentService
-                        .getAllStudents()
-                        .get(studentService.getAllStudents().size() - 1).getId()))
+                                .getAllStudents()
+                                .get(studentService.getAllStudents().size() - 1).getId())
+                        .header("role", "STUDENT_ROLE"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.firstName", Matchers.equalTo("Test")))
                 .andExpect(jsonPath("$.lastName", Matchers.equalTo("TestLastName")))
@@ -80,16 +96,19 @@ public class StudentControllerTest {
 
     @ParameterizedTest
     @CsvSource({"1, Wiktoria", "2, Aleksandra", "3, Ala"})
-    public void updateStudentTest(Long id, String firstName) throws Exception{
+    public void updateStudentTest(Long id, String firstName) throws Exception {
         Student student = new Student("Test", "TestLastName", 25);
         ObjectMapper mapper = new ObjectMapper();
         mockMvc.perform(MockMvcRequestBuilders.put("/api/student/{id}", id)
                         .content(mapper.writeValueAsString(student))
-                        .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk());
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/student/{id}", id))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("role", "STUDENT_ROLE"))
+                .andExpect(header().string("Successful", Is.is("true")))
+                .andExpect(status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/student/{id}", id).header("role", "STUDENT_ROLE"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.firstName", Matchers.equalTo(firstName)))
                 .andExpect(jsonPath("$.lastName", Matchers.equalTo("TestLastName")))
@@ -100,9 +119,10 @@ public class StudentControllerTest {
     @ValueSource(longs = {1, 4, 7})
     public void deleteStudentTest(Long id) throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/student/{id}",
-                id)).andExpect(status().isOk());
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/student"))
+                id).header("role", "STUDENT_ROLE")).andExpect(status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/student").header("role", "STUDENT_ROLE"))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(9)));
     }

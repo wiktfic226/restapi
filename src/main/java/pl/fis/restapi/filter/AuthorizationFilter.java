@@ -38,6 +38,7 @@ public abstract class AuthorizationFilter {
         errorDetails.put("errorMessage", "User unauthorized!");
         httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         httpServletResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        httpServletResponse.setHeader("Successful", "false");
         mapper.writeValue(httpServletResponse.getWriter(), errorDetails);
     }
 }

@@ -22,7 +22,7 @@ public class StudentController {
 
     @GetMapping
     public ResponseEntity<List<Student>> getAllStudents() {
-        return ResponseEntity.ok().body(studentService.getAllStudents());
+        return ResponseEntity.ok().header("Successful", "true").body(studentService.getAllStudents());
     }
 
     @GetMapping(path = "/{id}")

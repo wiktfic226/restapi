@@ -44,9 +44,11 @@ public class TeacherControllerTest {
 
     @Test
     public void getAllTeachersTest() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher")
+                        .header("role", "TEACHER_ROLE"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.[0].subject", Is.is(Subject.BIOLOGY.toString())))
@@ -54,12 +56,23 @@ public class TeacherControllerTest {
                 .andExpect(jsonPath("$.[2].subject", Is.is(Subject.LAW.toString())));
     }
 
+    @Test
+    public void unauthorizedAccessTest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("{\"errorMessage\":\"User unauthorized!\"}"))
+                .andExpect(header().string("Successful", Is.is("false")));
+    }
+
     @ParameterizedTest
     @CsvSource({"1, 5", "2, 4", "3, 3"})
     public void getTeachersCLassTest(Long id, Integer expectedClassSize) throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher/{id}/class", id))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher/{id}/class", id)
+                        .header("role", "TEACHER_ROLE"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$", hasSize(expectedClassSize)));
@@ -69,10 +82,14 @@ public class TeacherControllerTest {
     @CsvSource({"1, 1", "2, 2", "3, 3"})
     public void deleteStudentFromClassByTeacherIdTest(Long teacherId, Long studentId) throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/teacher/deleteStudentFromClass/{teacherId}",
-                teacherId).param("studentId", String.valueOf(studentId)))
+                                teacherId).param("studentId", String.valueOf(studentId))
+                        .header("role", "TEACHER_ROLE"))
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(status().isOk());
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/student/{id}", studentId))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/student/{id}", studentId)
+                        .header("role", "TEACHER_ROLE"))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.attendedSubjects", Matchers.empty()));
     }
@@ -80,8 +97,10 @@ public class TeacherControllerTest {
     @ParameterizedTest
     @CsvSource({"1, BIOLOGY", "2, ALGEBRA", "3, LAW"})
     public void getTeacherByIdTest(Long id, String subject) throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher/{id}", id))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher/{id}", id)
+                        .header("role", "TEACHER_ROLE"))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.subject", Matchers.equalTo(subject)));
     }
@@ -92,36 +111,36 @@ public class TeacherControllerTest {
         Teacher teacher = new Teacher("Test", "TestLastName", Subject.BIOLOGY);
         ObjectMapper mapper = new ObjectMapper();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/teacher")
-                .content(mapper.writeValueAsString(teacher))
-                .contentType(MediaType.APPLICATION_JSON))
+                        .header("role", "TEACHER_ROLE")
+                        .content(mapper.writeValueAsString(teacher))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(status().isOk());
         mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher/{id}", teacherService
-                        .getAllTeachers()
-                        .get(teacherService.getAllTeachers().size() - 1).getId()))
+                                .getAllTeachers()
+                                .get(teacherService.getAllTeachers().size() - 1).getId())
+                        .header("role", "TEACHER_ROLE"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(jsonPath("$.firstName", Matchers.equalTo("Test")))
                 .andExpect(jsonPath("$.lastName", Matchers.equalTo("TestLastName")))
                 .andExpect(jsonPath("$.subject", Matchers.equalTo(Subject.BIOLOGY.toString())));
     }
 
-//TODO
-//    @Test
-//    public void addTeacherWithExistingSubjectTest() throws Exception {
-//        mockMvc = MockMvcBuilders.standaloneSetup(TeacherController.class)
-//                .setControllerAdvice(new TeacherControllerAdvice())
-//                .build();
-//        Teacher teacher = new Teacher("Anna", "Test", Subject.BIOLOGY);
-//        ObjectMapper mapper = new ObjectMapper();
-//        mockMvc.perform(MockMvcRequestBuilders.post("/api/teacher")
-//                        .content(mapper.writeValueAsString(teacher))
-//                        .contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isBadRequest())
-//                .andExpect(result -> assertTrue(result.getResolvedException() instanceof IllegalArgumentException))
-//                .andExpect(result -> assertEquals(String.format("Teacher with subject %s already exists", teacher.getSubject()),
-//                        result.getResolvedException().getMessage()));
-//    }
+    @Test
+    public void addTeacherWithExistingSubjectTest() throws Exception {
+        Teacher teacher = new Teacher("Test", "TestLastName", Subject.BIOLOGY);
+        ObjectMapper mapper = new ObjectMapper();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/teacher")
+                        .header("role", "TEACHER_ROLE")
+                        .content(mapper.writeValueAsString(teacher))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(header().string("Successful", Is.is("false")))
+                .andExpect(content().string("400 Teacher with subject BIOLOGY already exists"));
+    }
 
     @Test
     public void editTeacherTest() throws Exception {
@@ -131,12 +150,16 @@ public class TeacherControllerTest {
         long id = 1;
         ObjectMapper mapper = new ObjectMapper();
         mockMvc.perform(MockMvcRequestBuilders.put("/api/teacher/{id}", id)
+                        .header("role", "TEACHER_ROLE")
                         .content(mapper.writeValueAsString(teacher))
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(status().isOk());
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher/{id}", id))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher/{id}", id)
+                        .header("role", "TEACHER_ROLE"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(jsonPath("$.firstName", Is.is("TestFirstName")))
                 .andExpect(jsonPath("$.lastName", Is.is("TestLastName")));
     }
@@ -145,9 +168,10 @@ public class TeacherControllerTest {
     @ValueSource(longs = {1L, 2L, 3L})
     public void deleteTeacherTest(Long id) throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/teacher/{id}",
-                        id)).andExpect(status().isOk());
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher"))
+                id).header("role", "TEACHER_ROLE")).andExpect(status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/teacher").header("role", "TEACHER_ROLE"))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Successful", Is.is("true")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(2)));
     }
