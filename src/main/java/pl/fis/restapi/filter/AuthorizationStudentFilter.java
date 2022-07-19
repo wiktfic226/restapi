@@ -15,10 +15,11 @@ public class AuthorizationStudentFilter extends AuthorizationFilter implements F
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        if (checkStudentAuthorizationHeaders((HttpServletRequest) servletRequest))
-            filterChain.doFilter(servletRequest, servletResponse);
-        else
-            returnErrorMessage((HttpServletResponse) servletResponse);
+//        if (checkStudentAuthorizationHeaders((HttpServletRequest) servletRequest))
+//            filterChain.doFilter(servletRequest, servletResponse);
+//        else
+//            returnErrorMessage((HttpServletResponse) servletResponse);
+        filterChain.doFilter(servletRequest, servletResponse);
     }
 
     @Override
