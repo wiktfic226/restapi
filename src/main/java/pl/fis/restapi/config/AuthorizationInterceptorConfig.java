@@ -2,11 +2,11 @@ package pl.fis.restapi.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import pl.fis.restapi.interceptor.AuthorizeInterceptor;
 
 @Configuration
-public class AuthorizationInterceptorConfig extends WebMvcConfigurerAdapter {
+public class AuthorizationInterceptorConfig implements WebMvcConfigurer {
     private final AuthorizeInterceptor authorizeInterceptor;
 
     public AuthorizationInterceptorConfig(AuthorizeInterceptor authorizeInterceptor) {
@@ -15,6 +15,7 @@ public class AuthorizationInterceptorConfig extends WebMvcConfigurerAdapter {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(authorizeInterceptor);
+        registry.addInterceptor(authorizeInterceptor)
+                .addPathPatterns("/api/student", "/api/teacher");
     }
 }
