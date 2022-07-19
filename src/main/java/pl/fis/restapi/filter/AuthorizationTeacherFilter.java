@@ -1,14 +1,12 @@
 package pl.fis.restapi.filter;
 
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-
 import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Enumeration;
 
-@Component
-@Order(3)
-public class AuthorizationTeacherFilter implements Filter {
+public class AuthorizationTeacherFilter extends AuthorizationFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         Filter.super.init(filterConfig);
@@ -16,7 +14,10 @@ public class AuthorizationTeacherFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        filterChain.doFilter(servletRequest, servletResponse);
+        if (checkTeacherAuthorizationHeaders((HttpServletRequest) servletRequest))
+            filterChain.doFilter(servletRequest, servletResponse);
+        else
+            returnErrorMessage((HttpServletResponse) servletResponse);
     }
 
     @Override

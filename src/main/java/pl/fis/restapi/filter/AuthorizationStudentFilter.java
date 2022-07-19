@@ -1,6 +1,8 @@
 package pl.fis.restapi.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
 import javax.servlet.*;
@@ -11,7 +13,9 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AuthorizationStudentFilter implements Filter {
+public class AuthorizationStudentFilter extends AuthorizationFilter implements Filter {
+    private final Logger LOGGER = LoggerFactory.getLogger(TimeWatcherFilter.class);
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         Filter.super.init(filterConfig);
@@ -19,24 +23,10 @@ public class AuthorizationStudentFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest) servletRequest;
-        Enumeration<String> headerNames = request.getHeaderNames();
-        while(headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            if(headerName.equals("role") && (request.getHeader(headerName).equals("STUDENT_ROLE")
-                    || request.getHeader(headerName).equals("TEACHER_ROLE")))
-                filterChain.doFilter(servletRequest, servletResponse);
-            else {
-                HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
-                Map<String, Object> errorDetails = new HashMap<>();
-                ObjectMapper mapper = new ObjectMapper();
-                errorDetails.put("errorMessage", "User unauthorized!");
-                httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                httpServletResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                mapper.writeValue(httpServletResponse.getWriter(), errorDetails);
-                return;
-            }
-        }
+        if (checkStudentAuthorizationHeaders((HttpServletRequest) servletRequest))
+            filterChain.doFilter(servletRequest, servletResponse);
+        else
+            returnErrorMessage((HttpServletResponse) servletResponse);
     }
 
     @Override
